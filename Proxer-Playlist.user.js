@@ -4,6 +4,7 @@
 // @description Fügt Proxer.me eine Playlist-Funktion hinzu. Durch ein Klick auf den Button "Zur Playlist hinzufügen" kann eine Folge eingereiht werden, danach kann über die Play-Funktion abgespielt werden.
 // @include     https://proxer.me*
 // @include     https://stream.proxer.me/embed-*
+// @version     1.4: Design-Integration verbessert, nicht unterstützte Designs haben jetzt ein Default-Wert
 // @version     1.3: Support für das schwarze Design eingebaut, Script nimmt jetzt das Design, welches ausgewählt ist
 // @version     1.2: Settings-Seite eingebaut ... auch wenn sie nicht viel bringt
 // @version     1.1: Videos starten jetzt nicht mehr im Hintergrund und die Playlist kann nicht mehr geöffnet werden, wenn kein Element eingereiht ist.
@@ -70,10 +71,10 @@ function Startup() {
 
 function injectStyle( style = null ) {
     var proxerStyle = (style !==null)?style:$("head link[rel='stylesheet'][href*='/css/color/']").attr("title");
-    if( $("head style").length > 0 ) {
-        $("head style").first().text( cssDesigns[ proxerStyle ]+css);
+    if( $("head style#Proxer-Playlist_Style").length > 0 ) {
+        $("head style#Proxer-Playlist_Style").text( cssDesigns[ proxerStyle ]+css);
     } else {
-        $("<style>"+cssDesigns[ proxerStyle ]+css+"</style>").appendTo("head");
+        $("<style id='Proxer-Playlist_Style'>"+cssDesigns[ proxerStyle ]+css+"</style>").appendTo("head");
     }
 }
 
