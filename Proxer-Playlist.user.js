@@ -4,6 +4,7 @@
 // @description Fügt Proxer.me eine Playlist-Funktion hinzu. Durch ein Klick auf den Button "Zur Playlist hinzufügen" kann eine Folge eingereiht werden, danach kann über die Play-Funktion abgespielt werden.
 // @include     https://proxer.me*
 // @include     https://stream.proxer.me/embed-*
+// @version     1.2: Settings-Seite eingebaut ... auch wenn sie nicht viel bringt
 // @version     1.1: Videos starten jetzt nicht mehr im Hintergrund und die Playlist kann nicht mehr geöffnet werden, wenn kein Element eingereiht ist.
 // @version     1.0: Release-Version, derzeit nur Proxer-Stream unterstützt, weitere werden folgen, wenn erwünscht. Code muss an einigen Stellen noch aufgeräumt werden, Verbesserungen folgen.
 // @version     0.1: Erster Umzug
@@ -16,7 +17,7 @@ $.fn.appendText = function (str) {
     return this.each(function(){ $(this).text( $(this).text() + str); });
 };
 
-var css = "#Proxer-Playlist{width:100px;height:45px;background-color:#5E5E5E;display:inline;border-right:1px solid #777;border-top:1px solid #777;border-radius:0 10px 0 0;bottom:0;left:0;position:fixed;padding:5px;z-index:1;color:#FFF;transition:all .25s ease}#Proxer-Playlist.active{width:300px;height:525px}#Proxer-Playlist_Toggle{width:100%;text-align:center;cursor:pointer;user-select:none}#Proxer-Playlist_Toggle span{margin-top:5px;display:block}#Proxer-Playlist.active #Proxer-Playlist_Toggle span:after{content:'\\25BC'}#Proxer-Playlist.inactive #Proxer-Playlist_Toggle span:after{content:'\\25B2'}#Proxer-Playlist_Content{margin-top:5px;width:100%;height:calc(100% - 50px);overflow:auto;border:1px solid #FFF}#Proxer-Playlist_Content > div.entry{border-bottom:1px solid #FFF;padding:5px;display:flex;justify-content:space-between;align-items:center}div.entry > div{margin:2px;max-width:135px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap}.noContent{text-align:center}.menuPlaylist{display:inline-block;padding:1px 6px;text-decoration:none;color:#FFF;border:1px solid #FFF;border-radius:6px}.menuPlaylist:hover{background-color:#FFF;color:#000}#Proxer-Playlist_Content > div:nth-child(even){background-color:#757575}#Proxer-Playlist.active > #Proxer-Playlist_Content{display:block}#Proxer-Playlist.inactive > #Proxer-Playlist_Content{display:none}#Proxer-Playlist_Player > div{display:block;position:fixed;left:0;top:0;width:100%;height:100%;z-index:10;transition:all .25s ease;background-color:rgba(0,0,0,.75)}#Proxer-Playlist_Player > video{position:fixed;height:504px;width:728px;left:50%;top:50%;transform:translate(-50%,-50%);background-color:#000;z-index:15}.wMirror .menu[title=Proxer-Playlist]{user-select:none;margin-top:5px;width:250px}.menu[data-support=false],.menuPlaylist[data-support=false]{pointer-events:none;opacity:.5}.fa-up:before{content:'\\21d1'}.fa-down:before{content:'\\21d3'}.fa-settings:before{content:'\\2699'}";
+var css = "#Proxer-Playlist{width:100px;height:45px;background-color:#5E5E5E;display:inline;border-right:1px solid #777;border-top:1px solid #777;border-radius:0 10px 0 0;bottom:0;left:0;position:fixed;padding:5px;z-index:1;color:#FFF;transition:all .25s ease}#Proxer-Playlist.active{width:300px;height:525px}#Proxer-Playlist_Toggle{width:100%;text-align:center;cursor:pointer;user-select:none}#Proxer-Playlist_Toggle span{margin-top:5px;display:block}#Proxer-Playlist.active #Proxer-Playlist_Toggle span:after{content:'\\25BC'}#Proxer-Playlist.inactive #Proxer-Playlist_Toggle span:after{content:'\\25B2'}#Proxer-Playlist_Content{margin-top:5px;width:100%;height:calc(100% - 50px);overflow:auto;border:1px solid #FFF}#Proxer-Playlist_Content > div.entry{border-bottom:1px solid #FFF;padding:5px;display:flex;justify-content:space-between;align-items:center}div.entry > div{margin:2px;max-width:135px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap}.noContent{text-align:center}.menuPlaylist{display:inline-block;padding:1px 6px;text-decoration:none;color:#FFF;border:1px solid #FFF;border-radius:6px}.menuPlaylist:hover{background-color:#FFF;color:#000}#Proxer-Playlist_Content > div:nth-child(even){background-color:#757575}#Proxer-Playlist.active > #Proxer-Playlist_Content{display:block}#Proxer-Playlist.inactive > #Proxer-Playlist_Content{display:none}#Proxer-Playlist_Player > div{display:block;position:fixed;left:0;top:0;width:100%;height:100%;z-index:10;transition:all .25s ease;background-color:rgba(0,0,0,.75)}#Proxer-Playlist_Player > video{position:fixed;height:504px;width:728px;left:50%;top:50%;transform:translate(-50%,-50%);background-color:#000;z-index:15}.wMirror .menu[title=Proxer-Playlist]{user-select:none;margin-top:5px;width:250px}.menu[data-support=false],.menuPlaylist[data-support=false]{pointer-events:none;opacity:.5}.fa-up:before{content:'\\21d1'}.fa-down:before{content:'\\21d3'}.fa-settings:before{content:'\\2699'}.SettingsWrapper{display:flex;align-items:center;justify-content:space-around;flex-wrap:wrap}.settings{text-transform:capitalize;margin:5px}";
 var supportedHosters = ["proxer-stream"];
 var Settings;
 var PlaylistVideo;
@@ -90,6 +91,35 @@ function StartStreamPage() {
 function StartSettingsPage() {
     StartDefault();
     $(".inner").html("");
+    $(".inner").append("<div class='SettingsWrapper'></div>");
+    
+    $("<p> Hier könnten noch mehr Einstellungen kommen, wenn ich dazu komme ... ALL HAIL LOLIS </p>").appendTo(".inner");
+    
+    var keys = [ "Proxer-Playlist", "Proxer-Playlist_Settings" ];
+    var _total = 0;
+    for(var i = 0; i < keys.length; i++) {
+            _total += ( typeof(localStorage[keys[i]]) !== "undefined" )? ( ( (localStorage[keys[i]].length + keys[i].length) * 2 ) / 1024 ) : 0;
+    }
+    $("<br /> <br /><p> Script belegt "+ _total.toFixed(2) + " KB LocalStorage-Speicher. </p>").appendTo(".inner");
+    
+    for(_s in Settings) {
+        var type = typeof Settings[_s];
+
+        if( type === "boolean" ) {
+            $("<div class='settings'><label>"+_s+"</label> <input id='"+_s+"' type='checkbox' "+( (Settings[_s]===true)?("checked"):"" )+"/></div>").appendTo(".SettingsWrapper");
+        }
+    }
+    $(".settings input").on("change", function() {
+        var tmp = {};
+        tmp[$(this).attr("id")] = $(this).is(":checked");
+        Settings = SetSettings( tmp );
+        
+        if( $(this).attr("id") === "active") {
+            setActiveState( !Settings["active"] );
+        }
+        
+        create_message(0, 5000, $(this).attr("id") + "-Wert gespeichert.");
+    });
 }
 
 function CreateSettingNavigationPoint(active = false) {
