@@ -4,6 +4,7 @@
 // @description Fügt Proxer.me eine Playlist-Funktion hinzu. Durch ein Klick auf den Button "Zur Playlist hinzufügen" kann eine Folge eingereiht werden, danach kann über die Play-Funktion abgespielt werden.
 // @include     https://proxer.me*
 // @include     https://stream.proxer.me/embed-*
+// @version     1.1: Videos starten jetzt nicht mehr im Hintergrund und die Playlist kann nicht mehr geöffnet werden, wenn kein Element eingereiht ist.
 // @version     1.0: Release-Version, derzeit nur Proxer-Stream unterstützt, weitere werden folgen, wenn erwünscht. Code muss an einigen Stellen noch aufgeräumt werden, Verbesserungen folgen.
 // @version     0.1: Erster Umzug
 // @connect     proxer.me
@@ -71,7 +72,9 @@ function StartDefault() {
     });
     
     $("#Proxer-Playlist_Toggle a[title='Play']").on("click", function() {
-        StartPlay();
+        if( $("#Proxer-Playlist_Content .entry").length > 0 ) {
+            StartPlay();
+        }
     });
     
     UpdatePlaylist();
@@ -137,9 +140,12 @@ function StartPlay() {
         
         $("#Proxer-Playlist_Player video").on("canplay", function() {
             if( Settings["fullscreen"] === true && !isFullscreen() ) {
-                openFullscreen();
+                //Currently not working either way ._.
+                //openFullscreen();
             }
-            PlaylistVideo.play();
+            if( $(this).parent().is(":visible") ) {
+                PlaylistVideo.play();
+            }
         });
         
         $("#Proxer-Playlist_Player video").on("ended", function() {
@@ -249,6 +255,7 @@ function isFullscreen() {
     return (document.fullscreen === true || document.webkitIsFullScreen === true || document.mozFullScreen === true );
 }
 
+//Currently not working due to restrictions of API requiring a user interaction
 function openFullscreen() {
     if(PlaylistVideo.requestFullscreen) {
         PlaylistVideo.requestFullscreen();
