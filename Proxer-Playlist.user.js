@@ -46,7 +46,11 @@ function Startup() {
     }
     //Test-Element in #main setzen, wenn dieses gesetzt ist, dann hat das Script alle nötigen Elemente innerhalb #main auch bereits gesetzt und muss diese nicht neu machen!
     $("<input type='hidden' id='ProxerPlaylistCheck' />").appendTo("#main");
-    $("head style").first().appendText( cssDesigns[ $("head link[rel='stylesheet'][href*='/css/color/']").attr("title") ]+css);
+    if( $("head style").length > 0 ) {
+        $("head style").first().appendText( cssDesigns[ $("head link[rel='stylesheet'][href*='/css/color/']").attr("title") ]+css);
+    } else {
+        $("<style>"+cssDesigns[ $("head link[rel='stylesheet'][href*='/css/color/']").attr("title") ]+css+"</style>").appendTo("head");
+    }
     
     Settings = GetSettings();
 
