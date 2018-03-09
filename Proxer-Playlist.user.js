@@ -4,6 +4,7 @@
 // @description Fügt Proxer.me eine Playlist-Funktion hinzu. Durch ein Klick auf den Button "Zur Playlist hinzufügen" kann eine Folge eingereiht werden, danach kann über die Play-Funktion abgespielt werden.
 // @include     https://proxer.me*
 // @include     https://stream.proxer.me/embed-*
+// @version     1.3: Support für das schwarze Design eingebaut, Script nimmt jetzt das Design, welches ausgewählt ist
 // @version     1.2: Settings-Seite eingebaut ... auch wenn sie nicht viel bringt
 // @version     1.1: Videos starten jetzt nicht mehr im Hintergrund und die Playlist kann nicht mehr geöffnet werden, wenn kein Element eingereiht ist.
 // @version     1.0: Release-Version, derzeit nur Proxer-Stream unterstützt, weitere werden folgen, wenn erwünscht. Code muss an einigen Stellen noch aufgeräumt werden, Verbesserungen folgen.
@@ -17,7 +18,19 @@ $.fn.appendText = function (str) {
     return this.each(function(){ $(this).text( $(this).text() + str); });
 };
 
-var css = "#Proxer-Playlist{width:100px;height:45px;background-color:#5E5E5E;display:inline;border-right:1px solid #777;border-top:1px solid #777;border-radius:0 10px 0 0;bottom:0;left:0;position:fixed;padding:5px;z-index:1;color:#FFF;transition:all .25s ease}#Proxer-Playlist.active{width:300px;height:525px}#Proxer-Playlist_Toggle{width:100%;text-align:center;cursor:pointer;user-select:none}#Proxer-Playlist_Toggle span{margin-top:5px;display:block}#Proxer-Playlist.active #Proxer-Playlist_Toggle span:after{content:'\\25BC'}#Proxer-Playlist.inactive #Proxer-Playlist_Toggle span:after{content:'\\25B2'}#Proxer-Playlist_Content{margin-top:5px;width:100%;height:calc(100% - 50px);overflow:auto;border:1px solid #FFF}#Proxer-Playlist_Content > div.entry{border-bottom:1px solid #FFF;padding:5px;display:flex;justify-content:space-between;align-items:center}div.entry > div{margin:2px;max-width:135px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap}.noContent{text-align:center}.menuPlaylist{display:inline-block;padding:1px 6px;text-decoration:none;color:#FFF;border:1px solid #FFF;border-radius:6px}.menuPlaylist:hover{background-color:#FFF;color:#000}#Proxer-Playlist_Content > div:nth-child(even){background-color:#757575}#Proxer-Playlist.active > #Proxer-Playlist_Content{display:block}#Proxer-Playlist.inactive > #Proxer-Playlist_Content{display:none}#Proxer-Playlist_Player > div{display:block;position:fixed;left:0;top:0;width:100%;height:100%;z-index:10;transition:all .25s ease;background-color:rgba(0,0,0,.75)}#Proxer-Playlist_Player > video{position:fixed;height:504px;width:728px;left:50%;top:50%;transform:translate(-50%,-50%);background-color:#000;z-index:15}.wMirror .menu[title=Proxer-Playlist]{user-select:none;margin-top:5px;width:250px}.menu[data-support=false],.menuPlaylist[data-support=false]{pointer-events:none;opacity:.5}.fa-up:before{content:'\\21d1'}.fa-down:before{content:'\\21d3'}.fa-settings:before{content:'\\2699'}.SettingsWrapper{display:flex;align-items:center;justify-content:space-around;flex-wrap:wrap}.settings{text-transform:capitalize;margin:5px}";
+var css = "#Proxer-Playlist{width:100px;height:45px;background-color:var(--main);display:inline;border-right:1px solid var(--accent2);border-top:1px solid var(--accent2);border-radius:0 10px 0 0;bottom:0;left:0;position:fixed;padding:5px;z-index:1;color:var(--text);transition:all .25s ease}#Proxer-Playlist.active{width:300px;height:525px}#Proxer-Playlist_Toggle{width:100%;text-align:center;cursor:pointer;user-select:none}#Proxer-Playlist_Toggle span{margin-top:5px;display:block}#Proxer-Playlist.active #Proxer-Playlist_Toggle span:after{content:'\\25BC'}#Proxer-Playlist.inactive #Proxer-Playlist_Toggle span:after{content:'\\25B2'}#Proxer-Playlist_Content{margin-top:5px;width:100%;height:calc(100% - 50px);overflow:auto;border:1px solid var(--accent)}#Proxer-Playlist_Content > div.entry{border-bottom:1px solid var(--accent);padding:5px;display:flex;justify-content:space-between;align-items:center}div.entry > div{margin:2px;max-width:135px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap}.noContent{text-align:center}.menuPlaylist{display:inline-block;padding:1px 6px;text-decoration:none;color:var(--menuspecial);border:1px solid var(--accent);border-radius:6px}.menuPlaylist:hover{background-color:var(--menuspecial);color:var(--menuspecialtext)}#Proxer-Playlist_Content > div:nth-child(even){background-color:var(--mainhighlight)}#Proxer-Playlist.active > #Proxer-Playlist_Content{display:block}#Proxer-Playlist.inactive > #Proxer-Playlist_Content{display:none}#Proxer-Playlist_Player > div{display:block;position:fixed;left:0;top:0;width:100%;height:100%;z-index:10;transition:all .25s ease;background-color:rgba(0,0,0,.75)}#Proxer-Playlist_Player > video{position:fixed;height:504px;width:728px;left:50%;top:50%;transform:translate(-50%,-50%);background-color:#000;z-index:15}.wMirror .menu[title=Proxer-Playlist]{user-select:none;margin-top:5px;width:250px}.menu[data-support=false],.menuPlaylist[data-support=false]{pointer-events:none;opacity:.5}.fa-up:before{content:'\\21d1'}.fa-down:before{content:'\\21d3'}.fa-settings:before{content:'\\2699'}.SettingsWrapper{display:flex;align-items:center;justify-content:space-around;flex-wrap:wrap}.settings{text-transform:capitalize;margin:5px}";
+
+var cssDesigns = [];
+cssDesigns["gray"] = ":root{--main:#5E5E5E;--mainhighlight:#757575;--accent:#FFF;--accent2:#777;--text:#FFF;--menuspecial:#FFF;--menuspecialtext:#000}";
+cssDesigns["black"] = ":root{--main:#000;--mainhighlight:#161616;--accent:#FFF;--accent2:#FFF;--text:#FFF;--menuspecial:#FFF;--menuspecialtext:#000}";
+cssDesigns["iLoveEnes#Augenkrebs"] = ":root{--main:#fa00ff;--mainhighlight:#fa2bff;--accent:#FFF;--accent2:#FFF;--text:#FFF;--menuspecial:#FFF;--menuspecialtext:#000}";
+
+//Noch nicht eingebaut, Default > Gray
+cssDesigns["old_blue"] = cssDesigns["gray"];
+
+//Sind wir mal ehrlich, wer benutzt das schon? Sieht doch kacke aus. Aber wenn die Leute schon Augenkrebs haben, dann doch bitte richtig!
+cssDesigns["pantsu"] = cssDesigns["iLoveEnes#Augenkrebs"] ;
+
 var supportedHosters = ["proxer-stream"];
 var Settings;
 var PlaylistVideo;
@@ -33,8 +46,8 @@ function Startup() {
     }
     //Test-Element in #main setzen, wenn dieses gesetzt ist, dann hat das Script alle nötigen Elemente innerhalb #main auch bereits gesetzt und muss diese nicht neu machen!
     $("<input type='hidden' id='ProxerPlaylistCheck' />").appendTo("#main");
-    $("head style").first().appendText(css);
-
+    $("head style").first().appendText( cssDesigns[ $("head link[rel='stylesheet'][href*='/css/color/']").attr("title") ]+css);
+    
     Settings = GetSettings();
 
     /*
