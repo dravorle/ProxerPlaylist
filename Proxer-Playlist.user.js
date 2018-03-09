@@ -46,11 +46,11 @@ function Startup() {
     }
     //Test-Element in #main setzen, wenn dieses gesetzt ist, dann hat das Script alle nötigen Elemente innerhalb #main auch bereits gesetzt und muss diese nicht neu machen!
     $("<input type='hidden' id='ProxerPlaylistCheck' />").appendTo("#main");
-    if( $("head style").length > 0 ) {
-        $("head style").first().appendText( cssDesigns[ $("head link[rel='stylesheet'][href*='/css/color/']").attr("title") ]+css);
-    } else {
-        $("<style>"+cssDesigns[ $("head link[rel='stylesheet'][href*='/css/color/']").attr("title") ]+css+"</style>").appendTo("head");
-    }
+    injectStyle();
+    
+    $(".colorbox").on("click", function() {
+        injectStyle( $(this).attr("class").split(" ")[1] );
+    });
     
     Settings = GetSettings();
 
@@ -66,6 +66,15 @@ function Startup() {
         CreateSettingNavigationPoint();
     }
     StartDefault();
+}
+
+function injectStyle( style = null ) {
+    var proxerStyle = (style !==null)?style:$("head link[rel='stylesheet'][href*='/css/color/']").attr("title");
+    if( $("head style").length > 0 ) {
+        $("head style").first().text( cssDesigns[ proxerStyle ]+css);
+    } else {
+        $("<style>"+cssDesigns[ proxerStyle ]+css+"</style>").appendTo("head");
+    }
 }
 
 function StartDefault() {
