@@ -3,6 +3,7 @@
 // @author      Dravorle
 // @description Fügt Proxer.me eine Playlist-Funktion hinzu. Durch ein Klick auf den Button "Zur Playlist hinzufügen" kann eine Folge eingereiht werden, danach kann über die Play-Funktion abgespielt werden.
 // @include     https://proxer.me*
+// @version     1.5.1: Kleine Änderungen
 // @version     1.5: Support für Mp4Upload vorbereitet, erste Tests mit Streamcloud ausgeführt (vorübergehend beides noch deaktiviert), Anzeige der Lade-Animation, wenn der Stream noch nicht geladen ist, kleine Aufräumarbeiten am Code
 // @version     1.4: Design-Integration verbessert, nicht unterstützte Designs haben jetzt ein Default-Wert und werden in einem eigenen Style-Tag gespeichert
 // @version     1.3: Support für das schwarze Design eingebaut, Script nimmt jetzt das Design, welches ausgewählt ist
@@ -100,7 +101,7 @@ function StartDefault() {
         });
     }
     
-    //Playlist-Button unten Links einbauen & mit Informationen füllen, wenn es bisher nicht existiert - sonst nichts tun
+    //Playlist-Button unten links einbauen & mit Informationen füllen, wenn es bisher nicht existiert - sonst nichts tun
     if( $("#Proxer-Playlist").length > 0 ) {
         return;
     }
@@ -120,8 +121,8 @@ function StartDefault() {
 
 function StartSettingsPage() {
     StartDefault();
-    $(".inner").html("");
-    $(".inner").append("<div class='SettingsWrapper'></div>");
+    $(".inner").eq(0).html("");
+    $(".inner").eq(0).append("<div class='SettingsWrapper'></div>");
     
     $("<p> Hier könnten noch mehr Einstellungen kommen, wenn ich dazu komme ... ALL HAIL LOLIS </p>").appendTo(".inner");
     
@@ -172,12 +173,7 @@ function StartPlay() {
         
         $("#Proxer-Playlist_Player div").on("click", function() {
             $(this).parent().hide();
-            
             PlaylistVideo.pause();
-            Settings = SetSettings( { lastCode: $(this).parent().attr("data-current") } );
-            if( Settings["savePosition"] === true ) {
-                Settings = SetSettings( { resumeTimer: PlaylistVideo.currentTime } );
-            }
         });
         
         $("#Proxer-Playlist_Player video").on("volumechange", function() {
