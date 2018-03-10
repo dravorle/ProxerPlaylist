@@ -3,14 +3,18 @@
 // @author      Dravorle
 // @description Fügt Proxer.me eine Playlist-Funktion hinzu. Durch ein Klick auf den Button "Zur Playlist hinzufügen" kann eine Folge eingereiht werden, danach kann über die Play-Funktion abgespielt werden.
 // @include     https://proxer.me*
-// @include     https://stream.proxer.me/embed-*
-// @version     1.4: Design-Integration verbessert, nicht unterstützte Designs haben jetzt ein Default-Wert
+// @version     1.5: Support für Mp4Upload vorbereitet, erste Tests mit Streamcloud ausgeführt (vorübergehend beides noch deaktiviert), Anzeige der Lade-Animation, wenn der Stream noch nicht geladen ist, kleine Aufräumarbeiten am Code
+// @version     1.4: Design-Integration verbessert, nicht unterstützte Designs haben jetzt ein Default-Wert und werden in einem eigenen Style-Tag gespeichert
 // @version     1.3: Support für das schwarze Design eingebaut, Script nimmt jetzt das Design, welches ausgewählt ist
 // @version     1.2: Settings-Seite eingebaut ... auch wenn sie nicht viel bringt
 // @version     1.1: Videos starten jetzt nicht mehr im Hintergrund und die Playlist kann nicht mehr geöffnet werden, wenn kein Element eingereiht ist.
 // @version     1.0: Release-Version, derzeit nur Proxer-Stream unterstützt, weitere werden folgen, wenn erwünscht. Code muss an einigen Stellen noch aufgeräumt werden, Verbesserungen folgen.
 // @version     0.1: Erster Umzug
+// @require     https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js
+// @require     https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js
 // @connect     proxer.me
+// @connect     mp4upload.com
+// @connect     streamcloud.eu
 // @grant       GM_xmlhttpRequest
 // @namespace   dravorle.proxer.me
 // @run-at      document-end
@@ -19,7 +23,7 @@ $.fn.appendText = function (str) {
     return this.each(function(){ $(this).text( $(this).text() + str); });
 };
 
-var css = "#Proxer-Playlist{width:100px;height:45px;background-color:var(--main);display:inline;border-right:1px solid var(--accent2);border-top:1px solid var(--accent2);border-radius:0 10px 0 0;bottom:0;left:0;position:fixed;padding:5px;z-index:1;color:var(--text);transition:all .25s ease}#Proxer-Playlist.active{width:300px;height:525px}#Proxer-Playlist_Toggle{width:100%;text-align:center;cursor:pointer;user-select:none}#Proxer-Playlist_Toggle span{margin-top:5px;display:block}#Proxer-Playlist.active #Proxer-Playlist_Toggle span:after{content:'\\25BC'}#Proxer-Playlist.inactive #Proxer-Playlist_Toggle span:after{content:'\\25B2'}#Proxer-Playlist_Content{margin-top:5px;width:100%;height:calc(100% - 50px);overflow:auto;border:1px solid var(--accent)}#Proxer-Playlist_Content > div.entry{border-bottom:1px solid var(--accent);padding:5px;display:flex;justify-content:space-between;align-items:center}div.entry > div{margin:2px;max-width:135px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap}.noContent{text-align:center}.menuPlaylist{display:inline-block;padding:1px 6px;text-decoration:none;color:var(--menuspecial);border:1px solid var(--accent);border-radius:6px}.menuPlaylist:hover{background-color:var(--menuspecial);color:var(--menuspecialtext)}#Proxer-Playlist_Content > div:nth-child(even){background-color:var(--mainhighlight)}#Proxer-Playlist.active > #Proxer-Playlist_Content{display:block}#Proxer-Playlist.inactive > #Proxer-Playlist_Content{display:none}#Proxer-Playlist_Player > div{display:block;position:fixed;left:0;top:0;width:100%;height:100%;z-index:10;transition:all .25s ease;background-color:rgba(0,0,0,.75)}#Proxer-Playlist_Player > video{position:fixed;height:504px;width:728px;left:50%;top:50%;transform:translate(-50%,-50%);background-color:#000;z-index:15}.wMirror .menu[title=Proxer-Playlist]{user-select:none;margin-top:5px;width:250px}.menu[data-support=false],.menuPlaylist[data-support=false]{pointer-events:none;opacity:.5}.fa-up:before{content:'\\21d1'}.fa-down:before{content:'\\21d3'}.fa-settings:before{content:'\\2699'}.SettingsWrapper{display:flex;align-items:center;justify-content:space-around;flex-wrap:wrap}.settings{text-transform:capitalize;margin:5px}";
+var css = "#Proxer-Playlist{width:100px;height:45px;background-color:var(--main);display:inline;border-right:1px solid var(--accent2);border-top:1px solid var(--accent2);border-radius:0 10px 0 0;bottom:0;left:0;position:fixed;padding:5px;z-index:1;color:var(--text);transition:all .25s ease}#Proxer-Playlist.active{width:300px;height:525px}#Proxer-Playlist_Toggle{width:100%;text-align:center;cursor:pointer;user-select:none}#Proxer-Playlist_Toggle span{margin-top:5px;display:block}#Proxer-Playlist.active #Proxer-Playlist_Toggle span:after{content:'\\25BC'}#Proxer-Playlist.inactive #Proxer-Playlist_Toggle span:after{content:'\\25B2'}#Proxer-Playlist_Content{margin-top:5px;width:100%;height:calc(100% - 50px);overflow:auto;border:1px solid var(--accent)}#Proxer-Playlist_Content > div.entry{border-bottom:1px solid var(--accent);padding:5px;display:flex;justify-content:space-between;align-items:center}div.entry > div{margin:2px;max-width:135px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap}.noContent{text-align:center}.menuPlaylist{display:inline-block;padding:1px 6px;text-decoration:none;color:var(--menuspecial);border:1px solid var(--accent);border-radius:6px}.menuPlaylist:hover{background-color:var(--menuspecial);color:var(--menuspecialtext)}#Proxer-Playlist_Content > div:nth-child(even){background-color:var(--mainhighlight)}#Proxer-Playlist.active > #Proxer-Playlist_Content{display:block}#Proxer-Playlist.inactive > #Proxer-Playlist_Content{display:none}#Proxer-Playlist_Player > div{display:block;position:fixed;left:0;top:0;width:100%;height:100%;z-index:10;transition:all .25s ease;background-color:rgba(0,0,0,.75)}#Proxer-Playlist_Player > video{position:fixed;height:504px;width:728px;left:50%;top:50%;transform:translate(-50%,-50%);background:url(https://proxer.me/images/misc/loading.gif) 50% no-repeat;background-color:#000;z-index:15}.wMirror .menu[title=Proxer-Playlist]{user-select:none;margin-top:5px;width:250px}.menu[data-support=false],.menuPlaylist[data-support=false]{pointer-events:none;opacity:.5}.fa-up:before{content:'\\21d1'}.fa-down:before{content:'\\21d3'}.fa-settings:before{content:'\\2699'}.SettingsWrapper{display:flex;align-items:center;justify-content:space-around;flex-wrap:wrap}.settings{text-transform:capitalize;margin:5px}";
 
 var cssDesigns = [];
 cssDesigns["gray"] = ":root{--main:#5E5E5E;--mainhighlight:#757575;--accent:#FFF;--accent2:#777;--text:#FFF;--menuspecial:#FFF;--menuspecialtext:#000}";
@@ -32,7 +36,7 @@ cssDesigns["old_blue"] = cssDesigns["gray"];
 //Sind wir mal ehrlich, wer benutzt das schon? Sieht doch kacke aus. Aber wenn die Leute schon Augenkrebs haben, dann doch bitte richtig!
 cssDesigns["pantsu"] = cssDesigns["iLoveEnes#Augenkrebs"] ;
 
-var supportedHosters = ["proxer-stream"];
+var supportedHosters = ["proxer-stream", /*"mp4upload"*/];
 var Settings;
 var PlaylistVideo;
 
@@ -86,7 +90,13 @@ function StartDefault() {
             $("a.menu[title='Proxer-Playlist']").attr("data-support", isSupported( $(this).attr("id").substr(7) ) );
         });
         $("a.menu[title='Proxer-Playlist']").on("click", function() {
-            AddToPlaylist( { AnimeTitle: $("span.wName").text(), Lang: $("span.wLanguage").text(), Ep: $("#wContainer span.wEp").text(), Hoster: $("a.menu.active").attr("id").substr(7), Code: $("div.wStream > iframe").attr("src").match(/([a-z0-9]{12})/g)[0] } );
+            //Variable s_id wird derzeit von Proxer nicht korrekt gesetzt, Enes wurde gebeten das ganze zu reparieren
+            //var hoster = streams[s_id].type;
+            //var code = streams[s_id].code;
+            var hoster = $("a.menu.active").attr("id").substr(7);
+            var code = $("div.wStream > iframe").attr("src").match(/([a-z0-9]{12})/g)[0];
+            
+            AddToPlaylist( { AnimeTitle: $("span.wName").text(), Lang: $("span.wLanguage").text(), Ep: $("#wContainer span.wEp").text(), Hoster: hoster, Code: code } );
         });
     }
     
@@ -94,7 +104,7 @@ function StartDefault() {
     if( $("#Proxer-Playlist").length > 0 ) {
         return;
     }
-    $("#wrapper").after( $("<div id='Proxer-Playlist' class='"+( (Settings["active"] === true)?("active"):("inactive") )+"'> <div id='Proxer-Playlist_Toggle'> <a class='menuPlaylist' title='Play'><i class='fa fa-play'></i></a> <a class='menuPlaylist' href='/ucp?s=Proxer-Playlist' data-ajax='true' title='Settings'><i class='fa fa-settings'></i></a><br /><span> Playlist </span> </div> <div id='Proxer-Playlist_Content'>  </div> </div>") );
+    $("#wrapper").after( $("<div id='Proxer-Playlist' class='"+( (Settings["active"] === true)?("active"):("inactive") )+"'> <div id='Proxer-Playlist_Toggle'> <a class='menuPlaylist' title='Play'><i class='fa fa-play'></i></a> <a class='menuPlaylist' href='/ucp?s=Proxer-Playlist' title='Settings'><i class='fa fa-settings'></i></a><br /><span> Playlist </span> </div> <div id='Proxer-Playlist_Content'>  </div> </div>") );
     $("#Proxer-Playlist_Toggle span").on("click", function() {
         setActiveState( $("#Proxer-Playlist").hasClass("active") );
     });
@@ -106,13 +116,6 @@ function StartDefault() {
     });
     
     UpdatePlaylist();
-}
-
-function StartStreamPage() {
-    $("<button class='Btn_TogglePlaylist'>+</button>").appendTo("div.flowplayer");
-    $(".Btn_TogglePlaylist").on("click", function() {
-        parent.postMessage($("video source").attr("src"), "*");
-    });
 }
 
 function StartSettingsPage() {
@@ -237,8 +240,6 @@ function loadVideo() {
         if( currCode !== firstItem.attr("data-code") ) {
             //Das erste Item hat inzwischen gewechselt, neues Item laden und alle vorher gespeicherten Werte bereinigen!
             $("#Proxer-Playlist_Player").attr("data-current", firstItem.attr("data-code"));
-            
-            //PlaylistVideo.src = handleRequest(firstItem.attr("data-hoster"), firstItem.attr("data-code"));
             handleRequest(firstItem.attr("data-hoster"), firstItem.attr("data-code"));
             
             Settings = SetSettings( { lastCode: firstItem.attr("data-code"), resumeTimer: 0 } );
@@ -251,8 +252,6 @@ function loadVideo() {
         if( Settings["lastCode"] === firstItem.attr("data-code") ) {
             //Video einfügen und Fortschritt setzen
             $("#Proxer-Playlist_Player").attr("data-current", firstItem.attr("data-code"));
-            
-            //PlaylistVideo.src = handleRequest(firstItem.attr("data-hoster"), firstItem.attr("data-code"));
             handleRequest(firstItem.attr("data-hoster"), firstItem.attr("data-code"));
             
             if( Settings["savePosition"] === true ) {
@@ -261,8 +260,6 @@ function loadVideo() {
         } else {
             //Erstes Video laden und Werte bereinigen
             $("#Proxer-Playlist_Player").attr("data-current", firstItem.attr("data-code"));
-            
-            //PlaylistVideo.src = handleRequest(firstItem.attr("data-hoster"), firstItem.attr("data-code"));
             handleRequest(firstItem.attr("data-hoster"), firstItem.attr("data-code"));
             
             Settings = SetSettings( { lastCode: firstItem.attr("data-code"), resumeTimer: 0 } );
@@ -271,15 +268,36 @@ function loadVideo() {
 }
 
 function handleRequest(hoster, code) {
+    var method = "GET";
+    var data = "";
+    var header = {};
+    if(hoster === "streamcloud2") {
+        method = "POST";
+        data = "op=download2&usr_login=&id="+code;
+        header = { "Content-Type": "application/x-www-form-urlencoded" };
+    }
+    
     GM_xmlhttpRequest({
-        method: "GET",
+        method: method,
         url: getMirrorUrl(hoster, code),
+        data: data,
+        headers: header,
         onload: function(response) {
             //Video-Url aus Response lesen
             var videoUrl = "";            
             switch(hoster) {
                 case "proxer-stream":
                     videoUrl = $(response.responseText).find("source").attr("src");
+                    break;
+                case "mp4upload":
+                    //Link der Source aus dem Code auslesen, da versuchen die doch echt es zu verstecken ;3
+                    var regex = /\|([w]{3}\d+)\|.*\|video\|([a-z1-9]*)\|(\d+)\|/g;
+                    var result = regex.exec(response.responseText);
+                    videoUrl = "https://"+result[1]+".mp4upload.com:"+result[3]+"/d/"+result[2]+"/video.mp4";
+                    break;
+                case "streamcloud2":
+                    var regex = /file\: \"(http\:\/\/.*video.mp4)\"/g;
+                    videoUrl = regex.exec(response.responseText)[1];
                     break;
                 default:
 
@@ -292,7 +310,21 @@ function handleRequest(hoster, code) {
 
 function getMirrorUrl(hoster, code) {
     //Später noch anpassen, dass hier der Link je nach Hoster angepasst wird, wie in Proxer hinterlegt.
-    return "https://stream.proxer.me/embed-"+code+"-728x504.html?utype=over9000";
+    var url = "";
+    switch(hoster) {
+        case "proxer-stream":
+            url = "https://stream.proxer.me/embed-"+code+"-728x504.html?utype=over9000";
+            break;
+        case "mp4upload":
+            url = "https://www.mp4upload.com/embed-"+code+".html";
+            break;
+        case "streamcloud2":
+            url = "http://streamcloud.eu/"+code;
+            break;
+        default:
+            break;
+    }
+    return url;
 }
 
 function setActiveState(isActive) {
