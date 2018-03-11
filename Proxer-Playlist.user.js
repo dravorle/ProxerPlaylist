@@ -3,6 +3,7 @@
 // @author      Dravorle
 // @description Fügt Proxer.me eine Playlist-Funktion hinzu. Durch ein Klick auf den Button "Zur Playlist hinzufügen" kann eine Folge eingereiht werden, danach kann über die Play-Funktion abgespielt werden.
 // @include     https://proxer.me*
+// @verxion     1.5.2: Fehler behoben, der dafür sorgte, dass der Player automatisch gestartet hat, wenn man zurückspult
 // @version     1.5.1: Kleine Änderungen
 // @version     1.5: Support für Mp4Upload vorbereitet, erste Tests mit Streamcloud ausgeführt (vorübergehend beides noch deaktiviert), Anzeige der Lade-Animation, wenn der Stream noch nicht geladen ist, kleine Aufräumarbeiten am Code
 // @version     1.4: Design-Integration verbessert, nicht unterstützte Designs haben jetzt ein Default-Wert und werden in einem eigenen Style-Tag gespeichert
@@ -194,7 +195,7 @@ function StartPlay() {
             }
         });
         
-        $("#Proxer-Playlist_Player video").on("canplay", function() {
+        $("#Proxer-Playlist_Player video").on("loadeddata", function() {
             if( Settings["fullscreen"] === true && !isFullscreen() ) {
                 //Currently not working either way ._.
                 //openFullscreen();
@@ -285,7 +286,7 @@ function handleRequest(hoster, code) {
                 case "proxer-stream":
                     videoUrl = $(response.responseText).find("source").attr("src");
                     break;
-                case "mp4upload":
+                case "mp4upload":                    
                     //Link der Source aus dem Code auslesen, da versuchen die doch echt es zu verstecken ;3
                     var regex = /\|([w]{3}\d+)\|.*\|video\|([a-z1-9]*)\|(\d+)\|/g;
                     var result = regex.exec(response.responseText);
