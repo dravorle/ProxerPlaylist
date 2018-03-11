@@ -3,7 +3,8 @@
 // @author      Dravorle
 // @description Fügt Proxer.me eine Playlist-Funktion hinzu. Durch ein Klick auf den Button "Zur Playlist hinzufügen" kann eine Folge eingereiht werden, danach kann über die Play-Funktion abgespielt werden.
 // @include     https://proxer.me*
-// @verxion     1.5.2: Fehler behoben, der dafür sorgte, dass der Player automatisch gestartet hat, wenn man zurückspult
+// @version     1.6: Support für Mp4Upload & Streamcloud aktiviert
+// @version     1.5.2: Fehler behoben, der dafür sorgte, dass der Player automatisch gestartet hat, wenn man zurückspult
 // @version     1.5.1: Kleine Änderungen
 // @version     1.5: Support für Mp4Upload vorbereitet, erste Tests mit Streamcloud ausgeführt (vorübergehend beides noch deaktiviert), Anzeige der Lade-Animation, wenn der Stream noch nicht geladen ist, kleine Aufräumarbeiten am Code
 // @version     1.4: Design-Integration verbessert, nicht unterstützte Designs haben jetzt ein Default-Wert und werden in einem eigenen Style-Tag gespeichert
@@ -38,7 +39,7 @@ cssDesigns["old_blue"] = cssDesigns["gray"];
 //Sind wir mal ehrlich, wer benutzt das schon? Sieht doch kacke aus. Aber wenn die Leute schon Augenkrebs haben, dann doch bitte richtig!
 cssDesigns["pantsu"] = cssDesigns["iLoveEnes#Augenkrebs"] ;
 
-var supportedHosters = ["proxer-stream", /*"mp4upload"*/];
+var supportedHosters = ["proxer-stream", "mp4upload", "streamcloud2"];
 var Settings;
 var PlaylistVideo;
 
@@ -92,11 +93,8 @@ function StartDefault() {
             $("a.menu[title='Proxer-Playlist']").attr("data-support", isSupported( $(this).attr("id").substr(7) ) );
         });
         $("a.menu[title='Proxer-Playlist']").on("click", function() {
-            //Variable s_id wird derzeit von Proxer nicht korrekt gesetzt, Enes wurde gebeten das ganze zu reparieren
-            //var hoster = streams[s_id].type;
-            //var code = streams[s_id].code;
-            var hoster = $("a.menu.active").attr("id").substr(7);
-            var code = $("div.wStream > iframe").attr("src").match(/([a-z0-9]{12})/g)[0];
+            var hoster = streams[s_id].type;
+            var code = streams[s_id].code;
             
             AddToPlaylist( { AnimeTitle: $("span.wName").text(), Lang: $("span.wLanguage").text(), Ep: $("#wContainer span.wEp").text(), Hoster: hoster, Code: code } );
         });
