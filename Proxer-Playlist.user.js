@@ -3,6 +3,7 @@
 // @author      Dravorle
 // @description Fügt Proxer.me eine Playlist-Funktion hinzu. Durch ein Klick auf den Button "Zur Playlist hinzufügen" kann eine Folge eingereiht werden, danach kann über die Play-Funktion abgespielt werden.
 // @include     https://proxer.me*
+// @ersion      1.6.2: Vollbild-Funktion verschoben um sie API-Konform und damit funktionsfähig zu machen
 // @version     1.6.1: Kleiner CSS-Fehler, der dafür sorgte, dass Items komisch dargestellt werden
 // @version     1.6: Support für Mp4Upload & Streamcloud aktiviert
 // @version     1.5.2: Fehler behoben, der dafür sorgte, dass der Player automatisch gestartet hat, wenn man zurückspult
@@ -16,6 +17,7 @@
 // @version     0.1: Erster Umzug
 // @require     https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js
 // @require     https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js
+// @require     https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
 // @connect     proxer.me
 // @connect     mp4upload.com
 // @connect     streamcloud.eu
@@ -113,6 +115,10 @@ function StartDefault() {
     $("#Proxer-Playlist_Toggle a[title='Play']").on("click", function() {
         if( $("#Proxer-Playlist_Content .entry").length > 0 ) {
             StartPlay();
+            
+            if( Settings["fullscreen"] === true && !isFullscreen() ) {
+                openFullscreen();
+            }
         }
     });
     
@@ -166,7 +172,7 @@ function CreateSettingNavigationPoint(active = false) {
 
 function StartPlay() {
     if( $("#Proxer-Playlist_Player").length === 0 ) {
-        $("<div id='Proxer-Playlist_Player' data-current=''><div></div><video oncontextmenu='return(false);' controls controlsList='nodownload'>></video></div>").appendTo("body");
+        $("<div id='Proxer-Playlist_Player' data-current=''><div></div><video oncontextmenu='return(false);' controls controlsList='nodownload'></video></div>").appendTo("body");
         PlaylistVideo = $("#Proxer-Playlist_Player video")[0];
         
         PlaylistVideo.volume = Settings["volume"];
@@ -195,10 +201,6 @@ function StartPlay() {
         });
         
         $("#Proxer-Playlist_Player video").on("loadeddata", function() {
-            if( Settings["fullscreen"] === true && !isFullscreen() ) {
-                //Currently not working either way ._.
-                //openFullscreen();
-            }
             if( $(this).parent().is(":visible") ) {
                 PlaylistVideo.play();
             }
@@ -340,7 +342,6 @@ function isFullscreen() {
     return (document.fullscreen === true || document.webkitIsFullScreen === true || document.mozFullScreen === true );
 }
 
-//Currently not working due to restrictions of API requiring a user interaction
 function openFullscreen() {
     if(PlaylistVideo.requestFullscreen) {
         PlaylistVideo.requestFullscreen();
