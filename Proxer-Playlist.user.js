@@ -89,6 +89,8 @@ function injectStyle( style = null ) {
 }
 
 function StartDefault() {
+    CastInit();
+    
     //Button zum zufügen in die Playlist unter die Mirror einfügen, wenn mindestens ein Mirror vorhanden ist
     if( $(".menu.changeMirror").length > 0 ) {
         $("<br /><a href='javascript:;' class='menu' data-support='"+ isSupported( $("a.menu.active").attr("id").substr(7)) +"' title='Proxer-Playlist'>Zur Playlist hinzufügen</a>").appendTo("td.wMirror");
@@ -125,6 +127,7 @@ function StartDefault() {
     UpdatePlaylist();
 }
 
+//TODO: Überarbeitung der Einstellungen, Beschreibung hinzufügen, mehr Einstellungen!
 function StartSettingsPage() {
     StartDefault();
     $(".inner").eq(0).html("");
@@ -445,7 +448,7 @@ function GetSettings(key = null) {
 function SetSettings(settings = null) {
     //Wenn Input = null, dann Standardeinstellungen schreiben
     if(settings === null) {
-        var defaultSettings = { active: false, fullscreen: false, savePosition: true, nextEpisodeTimer: 0, volume: 1.0, lastCode: "", resumeTimer: 0 };
+        var defaultSettings = { active: false, fullscreen: false, savePosition: true, nextEpisodeTimer: 0, volume: 1.0, lastCode: "", resumeTimer: 0, Chromecast: true };
         WriteToStorage( "Proxer-Playlist_Settings", defaultSettings );
         return defaultSettings;
     }
@@ -464,4 +467,54 @@ function GetFromStorage(key) {
 
 function WriteToStorage(key, jObj) {
     localStorage.setItem( key, JSON.stringify(jObj) );
+}
+
+//Chrome-Cast-Funktionen
+var ChromecastInstance = null;
+function CastInit( initialize = false ) {
+    if( Settings["Chromecast"] === true && typeof chrome !== "undefined" ) {
+        //Dieser Interval prüft im sekündigen Abstand ob die Cast-API verfügbar ist und startet danach den Initialisierungsvorgang
+        if( !initialize ) {
+            var _loadInterval = setInterval( function() {
+                    if (chrome.cast.isAvailable) {
+                            console.log( "Cast-API verfügbar" );
+                            clearInterval(_loadInterval);
+                            CastInit( true );
+                    } else {
+                            console.log( "Cast-API nicht verfügbar" );
+                    }
+            }, 1000);
+            return;
+        }
+
+        //Chromecast Basic-Setup, prüft ob ein Chromecast genutzt werden soll und im Netzwerk verfügbar ist
+        var appId = chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID;
+        var sr = new chrome.cast.SessionRequest(appId);
+        var conf = new chrome.cast.ApiConfig(sr, cbSession, cbReceiver);
+        
+        console.log(conf);
+        
+        chrome.cast.initialize(conf, cbInitSuccess, cbInitFailed);
+    }
+}
+
+function cbSession(e) {
+    console.log( "Neue Session erstellt!" );
+    ChromecastInstance = e;
+}
+
+function cbReceiver(e) {
+    if( e === "available" ) {
+        console.log( "Chromecast-Gerät im Netzwerk gefunden!" );
+    } else {
+        console.log( "Kein Chromecast-Gerät im Netzwerk!" );
+    }
+}
+
+function cbInitSuccess() {
+    console.log( "Init erfolgreich" );
+}
+
+function cbInitFailed() {
+    console.log( "Init fehlgeschlagen" );
 }
