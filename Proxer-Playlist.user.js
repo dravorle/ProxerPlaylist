@@ -3,7 +3,10 @@
 // @author      Dravorle
 // @description Fügt Proxer.me eine Playlist-Funktion hinzu. Durch ein Klick auf den Button "Zur Playlist hinzufügen" kann eine Folge eingereiht werden, danach kann über die Play-Funktion abgespielt werden.
 // @include     https://proxer.me*
-// @ersion      1.6.2: Vollbild-Funktion verschoben um sie API-Konform und damit funktionsfähig zu machen
+// @supportURL  https://proxer.me/forum/283/384556
+// @updateURL   https://github.com/dravorle/ProxerPlaylist/raw/master/Proxer-Playlist.user.js
+// @version     1.6.3: Vorbereitungen um einige Funktionen auszulagern
+// @version     1.6.2: Vollbild-Funktion verschoben um sie API-Konform und damit funktionsfähig zu machen
 // @version     1.6.1: Kleiner CSS-Fehler, der dafür sorgte, dass Items komisch dargestellt werden
 // @version     1.6: Support für Mp4Upload & Streamcloud aktiviert
 // @version     1.5.2: Fehler behoben, der dafür sorgte, dass der Player automatisch gestartet hat, wenn man zurückspult
@@ -17,7 +20,6 @@
 // @version     0.1: Erster Umzug
 // @require     https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js
 // @require     https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js
-// @require     https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
 // @connect     proxer.me
 // @connect     mp4upload.com
 // @connect     streamcloud.eu
@@ -40,7 +42,7 @@ cssDesigns["iLoveEnes#Augenkrebs"] = ":root{--main:#fa00ff;--mainhighlight:#fa2b
 cssDesigns["old_blue"] = cssDesigns["gray"];
 
 //Sind wir mal ehrlich, wer benutzt das schon? Sieht doch kacke aus. Aber wenn die Leute schon Augenkrebs haben, dann doch bitte richtig!
-cssDesigns["pantsu"] = cssDesigns["iLoveEnes#Augenkrebs"] ;
+cssDesigns["pantsu"] = cssDesigns["iLoveEnes#Augenkrebs"];
 
 var supportedHosters = ["proxer-stream", "mp4upload", "streamcloud2"];
 var Settings;
@@ -89,7 +91,7 @@ function injectStyle( style = null ) {
 }
 
 function StartDefault() {
-    CastInit();
+    //CastInit(); //Vorerst abgeschalten, wird ausgelagert
     
     //Button zum zufügen in die Playlist unter die Mirror einfügen, wenn mindestens ein Mirror vorhanden ist
     if( $(".menu.changeMirror").length > 0 ) {
@@ -179,6 +181,11 @@ function StartPlay() {
         PlaylistVideo = $("#Proxer-Playlist_Player video")[0];
         
         PlaylistVideo.volume = Settings["volume"];
+        
+        if( Settings["Chromecast"] === true && typeof chrome !== "undefined" ) {
+            //Button für Chromecast einblenden!
+            //Eventuell noch auslagern ~
+        }
         
         $("#Proxer-Playlist_Player div").on("click", function() {
             $(this).parent().hide();
@@ -285,7 +292,7 @@ function handleRequest(hoster, code) {
         headers: header,
         onload: function(response) {
             //Video-Url aus Response lesen
-            var videoUrl = "";            
+            var videoUrl = "";
             switch(hoster) {
                 case "proxer-stream":
                     videoUrl = $(response.responseText).find("source").attr("src");
@@ -467,54 +474,4 @@ function GetFromStorage(key) {
 
 function WriteToStorage(key, jObj) {
     localStorage.setItem( key, JSON.stringify(jObj) );
-}
-
-//Chrome-Cast-Funktionen
-var ChromecastInstance = null;
-function CastInit( initialize = false ) {
-    if( Settings["Chromecast"] === true && typeof chrome !== "undefined" ) {
-        //Dieser Interval prüft im sekündigen Abstand ob die Cast-API verfügbar ist und startet danach den Initialisierungsvorgang
-        if( !initialize ) {
-            var _loadInterval = setInterval( function() {
-                    if (chrome.cast.isAvailable) {
-                            console.log( "Cast-API verfügbar" );
-                            clearInterval(_loadInterval);
-                            CastInit( true );
-                    } else {
-                            console.log( "Cast-API nicht verfügbar" );
-                    }
-            }, 1000);
-            return;
-        }
-
-        //Chromecast Basic-Setup, prüft ob ein Chromecast genutzt werden soll und im Netzwerk verfügbar ist
-        var appId = chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID;
-        var sr = new chrome.cast.SessionRequest(appId);
-        var conf = new chrome.cast.ApiConfig(sr, cbSession, cbReceiver);
-        
-        console.log(conf);
-        
-        chrome.cast.initialize(conf, cbInitSuccess, cbInitFailed);
-    }
-}
-
-function cbSession(e) {
-    console.log( "Neue Session erstellt!" );
-    ChromecastInstance = e;
-}
-
-function cbReceiver(e) {
-    if( e === "available" ) {
-        console.log( "Chromecast-Gerät im Netzwerk gefunden!" );
-    } else {
-        console.log( "Kein Chromecast-Gerät im Netzwerk!" );
-    }
-}
-
-function cbInitSuccess() {
-    console.log( "Init erfolgreich" );
-}
-
-function cbInitFailed() {
-    console.log( "Init fehlgeschlagen" );
 }
