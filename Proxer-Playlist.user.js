@@ -79,6 +79,8 @@ function Startup() {
         CreateSettingNavigationPoint();
     }
     StartDefault();
+    
+    $(window).trigger( "PlaylistInitiated" );
 }
 
 function injectStyle( style = null ) {
@@ -91,8 +93,6 @@ function injectStyle( style = null ) {
 }
 
 function StartDefault() {
-    //CastInit(); //Vorerst abgeschalten, wird ausgelagert
-    
     //Button zum zufügen in die Playlist unter die Mirror einfügen, wenn mindestens ein Mirror vorhanden ist
     if( $(".menu.changeMirror").length > 0 ) {
         $("<br /><a href='javascript:;' class='menu' data-support='"+ isSupported( $("a.menu.active").attr("id").substr(7)) +"' title='Proxer-Playlist'>Zur Playlist hinzufügen</a>").appendTo("td.wMirror");
@@ -177,7 +177,7 @@ function CreateSettingNavigationPoint(active = false) {
 
 function StartPlay() {
     if( $("#Proxer-Playlist_Player").length === 0 ) {
-        $("<div id='Proxer-Playlist_Player' data-current=''><div></div><video oncontextmenu='return(false);' controls controlsList='nodownload'></video></div>").appendTo("body");
+        $("<div id='Proxer-Playlist_Player' data-current=''><div class='dim'></div><video oncontextmenu='return(false);' controls controlsList='nodownload'></video></div>").appendTo("body");
         PlaylistVideo = $("#Proxer-Playlist_Player video")[0];
         
         PlaylistVideo.volume = Settings["volume"];
@@ -187,7 +187,7 @@ function StartPlay() {
             //Eventuell noch auslagern ~
         }
         
-        $("#Proxer-Playlist_Player div").on("click", function() {
+        $("#Proxer-Playlist_Player div.dim").on("click", function() {
             $(this).parent().hide();
             PlaylistVideo.pause();
         });
@@ -229,7 +229,7 @@ function StartPlay() {
                 if( isFullscreen() ) {
                     closeFullscreen();
                 }
-                $("#Proxer-Playlist_Player div").trigger("click");
+                $("#Proxer-Playlist_Player div.dim").trigger("click");
             }
         });
     } else {
@@ -455,7 +455,7 @@ function GetSettings(key = null) {
 function SetSettings(settings = null) {
     //Wenn Input = null, dann Standardeinstellungen schreiben
     if(settings === null) {
-        var defaultSettings = { active: false, fullscreen: false, savePosition: true, nextEpisodeTimer: 0, volume: 1.0, lastCode: "", resumeTimer: 0, Chromecast: true };
+        var defaultSettings = { active: false, fullscreen: false, savePosition: true, nextEpisodeTimer: 0, volume: 1.0, lastCode: "", resumeTimer: 0 };
         WriteToStorage( "Proxer-Playlist_Settings", defaultSettings );
         return defaultSettings;
     }
