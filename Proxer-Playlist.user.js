@@ -101,7 +101,7 @@ function injectStyle( _css, id = null, reference = false ) {
         if( $( "head style#"+id ).length == 0 ) {
             $( "<style id='"+id+"'> "+_css+" </style>" ).appendTo( "head" );
         } else {
-            $( "head style#"+id ).Text( _css );
+            $( "head style#"+id ).text( _css );
         }
     }
 }
@@ -209,16 +209,6 @@ function StartPlay() {
         $("#Proxer-Playlist_Player video").on("volumechange", function() {
             Settings = SetSettings( { volume: PlaylistVideo.volume } );
         });
-        
-        /*
-        $("#Proxer-Playlist_Player video").on("click", function() {
-            if( PlaylistVideo.paused ) {
-                PlaylistVideo.play();
-            } else {
-                PlaylistVideo.pause();
-            }
-        });
-        */
         
         $("#Proxer-Playlist_Player div.plyr__video-wrapper").on("click", function() {
             if( PlaylistVideo.paused ) {
