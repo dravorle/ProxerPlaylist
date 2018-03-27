@@ -21,7 +21,6 @@
 // @require     https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js
 // @require     https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js
 // @require     https://cdn.proxer.me/libs/psplayer/psplayer.js?1
-// @require     ChromecastHandler.js
 // @connect     proxer.me
 // @connect     mp4upload.com
 // @connect     streamcloud.eu
@@ -61,10 +60,14 @@ function Startup() {
     }
     //Test-Element in #main setzen, wenn dieses gesetzt ist, dann hat das Script alle nötigen Elemente innerhalb #main auch bereits gesetzt und muss diese nicht neu machen!
     $("<input type='hidden' id='ProxerPlaylistCheck' />").appendTo("#main");
-    injectStyle();
+    
+    injectStyle( cssDesigns[ $("head link[rel='stylesheet'][href*='/css/color/']").attr("title") ], "Proxer-Playlist_Design" );
+    injectStyle( css, "Proxer-Playlist_Style" );
+    
+    injectStyle( "//cdn.proxer.me/libs/psplayer/psplayer.css", "Proxer-Playlist_PS", true );
     
     $(".colorbox").on("click", function() {
-        injectStyle( $(this).attr("class").split(" ")[1] );
+        injectStyle( cssDesigns[ $(this).attr("class").split(" ")[1] ], "Proxer-Playlist_Design" );
     });
     
     Settings = GetSettings();
@@ -82,19 +85,24 @@ function Startup() {
     }
     StartDefault();
     
-    $(window).trigger( "PlaylistInitiated" );
+    trigger( "PlaylistInitiated" );
 }
 
-function injectStyle( style = null ) {
-    var proxerStyle = (style !==null)?style:$("head link[rel='stylesheet'][href*='/css/color/']").attr("title");
-    if( $("head style#Proxer-Playlist_Style").length > 0 ) {
-        $("head style#Proxer-Playlist_Style").text( cssDesigns[ proxerStyle ]+css);
+//Style wird mit einer ID in den Head von Proxer injected, dadurch ist es jederzeit möglich von einem Zusatzscript ebenfalls Styles für die Playlist einzufügen
+function injectStyle( _css, id = null, reference = false ) {
+    if(reference) {
+        if( $( "head link#"+id ).length == 0 ) {
+            $( "<link id='"+id+"' rel='stylesheet' type='text/css' href='"+_css+"' />" ).appendTo( "head" );
+        } else {
+            $( "head link#"+id ).attr("src", _css);
+        }
     } else {
-        $("<style id='Proxer-Playlist_Style'>"+cssDesigns[ proxerStyle ]+css+"</style>").appendTo("head");
-    }
-    
-    if( $("head link#Proxer-Playlist_PS").length === 0 ) {
-        $("<link id='Proxer-Playlist_PS' rel='stylesheet' href='//cdn.proxer.me/libs/psplayer/psplayer.css' type='text/css'>").appendTo("head");
+        if( id === null ) { id = "Proxer-Playlist_Style"; };
+        if( $( "head style#"+id ).length == 0 ) {
+            $( "<style id='"+id+"'> "+_css+" </style>" ).appendTo( "head" );
+        } else {
+            $( "head style#"+id ).Text( _css );
+        }
     }
 }
 
@@ -191,10 +199,7 @@ function StartPlay() {
         PlaylistVideo = $("#Proxer-Playlist_Player video")[0];
         PlaylistVideo.volume = Settings["volume"];
         
-        if( Settings["Chromecast"] === true && typeof chrome !== "undefined" ) {
-            //Button für Chromecast einblenden!
-            //Eventuell noch auslagern ~
-        }
+        trigger( "SetupPlyr" );
         
         $("#Proxer-Playlist_Player div.dim").on("click", function() {
             $(this).parent().hide();
@@ -493,4 +498,9 @@ function GetFromStorage(key) {
 
 function WriteToStorage(key, jObj) {
     localStorage.setItem( key, JSON.stringify(jObj) );
+}
+
+function trigger(eventName) {
+    console.log( "Triggered: " + eventName );
+    $(window).trigger( eventName );
 }
