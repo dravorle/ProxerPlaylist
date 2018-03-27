@@ -21,6 +21,7 @@
 // @require     https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js
 // @require     https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js
 // @require     https://cdn.proxer.me/libs/psplayer/psplayer.js?1
+// @require     ChromecastHandler.js
 // @connect     proxer.me
 // @connect     mp4upload.com
 // @connect     streamcloud.eu
