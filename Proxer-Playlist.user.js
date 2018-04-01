@@ -5,6 +5,7 @@
 // @include     https://proxer.me*
 // @supportURL  https://proxer.me/forum/283/384556
 // @updateURL   https://github.com/dravorle/ProxerPlaylist/raw/master/Proxer-Playlist.user.js
+// @version     1.6.5: Kleine Veränderungen am Proxer-Player
 // @version     1.6.4: Einbau des Proxer-Streams fertiggestellt
 // @version     1.6.3: Vorbereitungen um einige Funktionen auszulagern
 // @version     1.6.2: Vollbild-Funktion verschoben um sie API-Konform und damit funktionsfähig zu machen
@@ -194,7 +195,7 @@ function StartPlay() {
     if( $("#Proxer-Playlist_Player").length === 0 ) {
         $("<div id='Proxer-Playlist_Player' data-current=''><div class='dim'></div><div class='playerWrapper'><video class='plyr'></video></div></div>").appendTo("body");
         
-        plyr.setup( { clickToPlay: false, iconUrl: "https://proxer.me/images/misc/psplayer.svg" } );
+        plyr.setup( { clickToPlay: false, iconUrl: "https://proxer.me/images/misc/psplayer.svg", volumeMax: 100 } );
         
         PlaylistVideo = $("#Proxer-Playlist_Player video")[0];
         PlaylistVideo.volume = Settings["volume"];
